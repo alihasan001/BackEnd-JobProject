@@ -21,4 +21,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('LogIn.urls')),
     path('company/',include('Company.urls')),
+<<<<<<< HEAD
 ]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+=======
+]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+>>>>>>> 6c891605c1bb4a0f44b79b0fcfe0fed990b5201d

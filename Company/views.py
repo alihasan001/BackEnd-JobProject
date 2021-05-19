@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from .models import *
 from .Serializers import *
 from rest_framework import status
+import datetime
 import xml.etree.ElementTree as ET
 # Create your views here.
 
@@ -62,150 +63,75 @@ class addNewCompany(APIView):
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
 
-def read_tag(list):
-    l = {}
-    for i in list:
-        if i.text != None:
-            l[i.tag] = i.text
-        else:
-            l[i.tag] = ""
-    return l
-
-
-def read_xml(file):
-    tree = ET.parse(file)
-    root = tree.getroot()
-    l = []
-    for elem in root:
-        l.append(read_tag(elem))
-    return l
-
-
-class addJobs(APIView):
-    def post(self, request):
-        data = request.data['file']
-        try:
-            data = read_xml(data)
-            print(data[0]['AdvertiserName'])
-            for i in data:
-                company = Company.objects.filter(Name= i['AdvertiserName'])[0]
-                if not Company.objects.filter(Name=i['AdvertiserName']).exists():
-                    if i['LogoURL'] == "":
-                        company = Company(Name=i['AdvertiserName'], Location=i['Location'],
-                                        WebSite=i['DescriptionURL'], About=i['AdvertiserType'], Categories=i['Classification']
-                                        )
-                        company.save()
-                    else:
-                        company = Company(Name=i['AdvertiserName'], Location=i['Location'],
-                                        WebSite=i['DescriptionURL'], About=i['AdvertiserType'], logo=i['LogoURL'], Categories=i['Classification']
-                                        )
-                        company.save()
-                if i['LogoURL'] == "":
-                    job = Job(
-                        Company = company,
-                        AdvertiserName=i['AdvertiserName'],  AdvertiserType=i['AdvertiserType'], SenderReference=i['SenderReference'],
-                        DisplayReference=i['DisplayReference'], PostDate=i['PostDate'], Classification=i['Classification'],
-                        SubClassification=i['SubClassification'], Position=i['Position'], Description=i['Description'],
-                        Country=i['Country'], Location=i['Location'], Area=i['Area'],
-                        PostalCode=i['PostalCode'], ApplicationURL=i['ApplicationURL'], DescriptionURL=i['DescriptionURL'],
-                        Language=i['Language'],
-                        ContactName=i['ContactName'], EmploymentType=i['EmploymentType'], StartDate=i['StartDate'],
-                        Duration=i['Duration'], WorkHours=i['WorkHours'], SalaryCurrency=i['SalaryCurrency'],
-                        SalaryMinimum=i['SalaryMinimum'], SalaryMaximum=i['SalaryMaximum'], SalaryPeriod=i['SalaryPeriod'],
-                        SalaryAdditional=i['SalaryAdditional'], JobSource=i['JobSource'], JobSourceURL=i['JobSourceURL'],
-                        VideoLinkURL=i['VideoLinkURL'], AdditionalClassification1=i['AdditionalClassification1'],
-                        AdditionalClassification2=i['AdditionalClassification2'], AdditionalClassification3=i['AdditionalClassification3'],
-                        AdditionalClassification4=i['AdditionalClassification4'], JobType=i['JobType']
-                    )
-                    job.save()
-                else:
-                    job = Job(
-                        Company = company,
-                        AdvertiserName=i['AdvertiserName'],  AdvertiserType=i['AdvertiserType'], SenderReference=i['SenderReference'],
-                        DisplayReference=i['DisplayReference'], PostDate=i['PostDate'], Classification=i['Classification'],
-                        SubClassification=i['SubClassification'], Position=i['Position'], Description=i['Description'],
-                        Country=i['Country'], Location=i['Location'], Area=i['Area'],
-                        PostalCode=i['PostalCode'], ApplicationURL=i['ApplicationURL'], DescriptionURL=i['DescriptionURL'],
-                        Language=i['Language'],
-                        ContactName=i['ContactName'], EmploymentType=i['EmploymentType'], StartDate=i['StartDate'],
-                        Duration=i['Duration'], WorkHours=i['WorkHours'], SalaryCurrency=i['SalaryCurrency'],
-                        SalaryMinimum=i['SalaryMinimum'], SalaryMaximum=i['SalaryMaximum'], SalaryPeriod=i['SalaryPeriod'],
-                        SalaryAdditional=i['SalaryAdditional'], JobSource=i['JobSource'], JobSourceURL=i['JobSourceURL'],
-                        VideoLinkURL=i['VideoLinkURL'], AdditionalClassification1=i['AdditionalClassification1'],
-                        AdditionalClassification2=i['AdditionalClassification2'], AdditionalClassification3=i['AdditionalClassification3'],
-                        AdditionalClassification4=i['AdditionalClassification4'],
-                        LogoURL=i['LogoURL'], JobType=i['JobType']
-                    )
-                    job.save()
-            return Response({'Data': data})
-        except:
-            message = {'detail': 'Error in File Reading'}
-            return Response(message, status=status.HTTP_400_BAD_REQUEST)
 class getAllCategories(APIView):
-    def get(self,request):
+    def get(self, request):
         categories = Job.objects.all().values('Classification')
         if categories is not None:
-            l=[]
+            l = []
             for i in categories:
                 l.append(i['Classification'])
             list = set(l)
             cat = {}
             for i in list:
-                cat[i]=l.count(i)
-            return Response({'data':cat})
-        return Response({'data':None})
+                cat[i] = l.count(i)
+            return Response({'data': cat})
+        return Response({'data': None})
+
 
 class getAllCountries(APIView):
-    def get(self,request):
+    def get(self, request):
         countries = Job.objects.all().values('Country')
         if countries is not None:
-            l=[]
+            l = []
             for i in countries:
                 l.append(i['Country'])
             list = set(l)
             cat = {}
             for i in list:
-                cat[i]=l.count(i)
-            return Response({'data':cat})  
-        return Response({'data':None})    
+                cat[i] = l.count(i)
+            return Response({'data': cat})
+        return Response({'data': None})
+
 
 class getAllCompanies(APIView):
-    def get(self,request):
-        company = Job.objects.all().values('AdvertiserName','LogoURL')
+    def get(self, request):
+        company = Job.objects.all().values('AdvertiserName', 'LogoURL')
         if company is not None:
             # print(company)
-            l=[]
+            l = []
             for i in company:
-                l.append((i['AdvertiserName'],i['LogoURL']))
+                l.append((i['AdvertiserName'], i['LogoURL']))
             list = set(l)
             for i in list:
                 print(i)
             cat = {}
             for i in list:
-                cat[i[0]]=[l.count(i),i[1]]
+                cat[i[0]] = [l.count(i), i[1]]
             print(cat)
-            return Response({'data':cat}) 
-        return Response({'data':None}) 
+            return Response({'data': cat})
+        return Response({'data': None})
 
 
 class getjobCountry(APIView):
     def get(self, request, *args, **kwargs):
-        Name = self.kwargs.get('Name')
+        Name = self.kwargs.get('Country')
         jobs = None
-        jobs = Job.objects.filter(Country = Name)
-        jobs = JobSerializer(jobs, many =True)
-        return Response({'Jobs':jobs.data})
+        jobs = Job.objects.filter(Country=Name)
+        jobs = JobSerializer(jobs, many=True)
+        return Response({'Jobs': jobs.data})
+
 
 class getJobsName(APIView):
     def get(self, request, *args, **kwargs):
-        Name = self.kwargs.get('Name')
-        jobs = Job.objects.filter(AdvertiserName = Name)
-        jobs = JobSerializer(jobs, many =True)
-        return Response({'Jobs':jobs.data})        
+        Name = self.kwargs.get('JobName')
+        jobs = Job.objects.filter(AdvertiserName=Name)
+        jobs = JobSerializer(jobs, many=True)
+        return Response({'Jobs': jobs.data})
+
 
 class getJobsCategory(APIView):
     def get(self, request, *args, **kwargs):
-        Name = self.kwargs.get('Name')
-        jobs = Job.objects.filter(Classification = Name)
-        jobs = JobSerializer(jobs, many =True)
-        return Response({'Jobs':jobs.data})     
+        Name = self.kwargs.get('Category')
+        jobs = Job.objects.filter(Classification=Name)
+        jobs = JobSerializer(jobs, many=True)
+        return Response({'Jobs': jobs.data})
